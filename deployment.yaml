@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-ci-cd-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-ci-cd-api
+  template:
+    metadata:
+      labels:
+        app: test-ci-cd-api
+    spec:
+      containers:
+      - name: test-ci-cd-api
+        image: java_image/test-ci-cd-api:v1.0.0
+        ports:
+        - containerPort: 8088
