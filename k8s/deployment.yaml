@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: test-ci-cd-api
 spec:
-  type: LoadBalancer
+  type: NodePort
   replicas: 1
   selector:
     matchLabels:
