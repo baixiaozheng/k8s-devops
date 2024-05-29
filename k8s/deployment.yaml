@@ -1,8 +1,9 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: Service
 metadata:
   name: test-ci-cd-api
 spec:
+  type: LoadBalancer
   replicas: 1
   selector:
     matchLabels:
