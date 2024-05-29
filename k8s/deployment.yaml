@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: test-ci-cd-api
-        image: harbor.femeex.com/java_image/test-ci-cd-api:v1.0.2
+        image: harbor.femeex.com/java_image/test-ci-cd-api:v1.0.3
         ports:
         - containerPort: 8085
