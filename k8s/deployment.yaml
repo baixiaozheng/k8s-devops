@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Service
+kind: Deployment
 metadata:
   name: test-ci-cd-api
 spec:
