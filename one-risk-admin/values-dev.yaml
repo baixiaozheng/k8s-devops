@@ -6,7 +6,7 @@ image:
   tag: "dev"
 
 persistence:
-  enabled: true
+  enabled: false
   storageClassName: nfs-hdd
   accessModes:
     - ReadWriteMany
