@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cnx-risk-admin-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cnx-risk-admin-dev
+  template:
+    metadata:
+      labels:
+        app: cnx-risk-admin-dev
+    spec:
+      containers:
+      - name: cnx-risk-admin-dev
+        image: asia.gcr.io/hqex-no2/cnx/cnx-risk-admin-dev:dev
+        ports:
+        - containerPort: 8085
