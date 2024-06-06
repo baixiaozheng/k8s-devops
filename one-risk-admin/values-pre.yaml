@@ -157,3 +157,10 @@ config:
       maxAge: 72h
       rotationTime: 1h
     debug: false
+  http:
+    port: 8080
+    timeouts:
+      readTimeout: 2s
+      readHeaderTimeout: 2s
+      writeTimeout: 10s
+      idleTimeout: 5s
