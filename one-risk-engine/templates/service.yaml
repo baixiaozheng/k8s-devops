@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cnx-order.fullname" . }}
+  labels:
+    {{- include "cnx-order.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      {{- with .Values.config.http.port | default .Values.service.targetPort }}
+      targetPort: {{ . }}
+      {{- end }}
+      protocol: TCP
+      name: cnx-order
+  selector:
+    {{- include "cnx-order.selectorLabels" . | nindent 4 }}

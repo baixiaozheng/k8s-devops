@@ -1,0 +1,28 @@
+{{- if .Values.virtualService.enabled -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "cnx-risk-admin.fullname" . }}
+  labels:
+    {{- include "cnx-risk-admin.labels" . | nindent 4 }}
+spec:
+  hosts:
+  {{- range $host := .Values.virtualService.hosts }}
+  - {{ $host }}
+  {{- end }}
+  gateways:
+  {{- range $gateway := .Values.virtualService.gateways }}
+  - {{ $gateway }}
+  {{- end }}
+  http:
+  - match:
+    - uri:
+        prefix: "/order/"
+    rewrite:
+      uri: "/"
+    route:
+    - destination:
+        host: {{ include "cnx-risk-admin.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.service.port }}
+{{- end }}

@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cnx-risk-admin.fullname" . }}
+  labels:
+    {{- include "cnx-risk-admin.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "cnx-risk-admin.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "cnx-risk-admin.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "cnx-risk-admin.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "cnx-risk-admin.fullname" . }}
+            items:
+              - key: config.yaml
+                path: config.yaml
+        {{- if and .Values.filebeat.enabled .Values.filebeat.config }}
+        - name: filebeat-config
+          configMap:
+            defaultMode: 0644
+            name: {{ include "cnx-risk-admin.fullname" . }}-filebeat
+        {{- end }}
+        - name: logs-volume                
+        {{- if .Values.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "cnx-risk-admin.fullname" .) }}
+        {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TZ
+              value: {{ .Values.timezone }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - name: http
+              {{- with .Values.config.http.port | default .Values.service.targetPort }}
+              containerPort: {{ . }}
+              {{- end }}
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: logs-volume
+              mountPath: /app/logs
+        {{- if .Values.filebeat.enabled }}
+        - name: "filebeat"
+          image: "{{ .Values.filebeat.image.repository }}:{{ .Values.filebeat.image.tag }}"
+          imagePullPolicy: "{{ .Values.filebeat.image.pullPolicy }}"
+          args:
+            - "-e"
+            - "-strict.perms=false"
+          {{- with .Values.filebeat.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.filebeat.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources: {{ toYaml ( .Values.filebeat.resources ) | nindent 14 }}
+          env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+{{- if .Values.filebeat.extraEnvs }}
+{{ toYaml ( .Values.filebeat.extraEnvs ) | indent 8 }}
+{{- end }}
+          {{- if .Values.filebeat.envFrom }}
+          envFrom: {{ toYaml ( .Values.filebeat.envFrom ) | nindent 14 }}
+          {{- end }}
+          securityContext: {{ toYaml ( .Values.filebeat.securityContext ) | nindent 14 }}
+          volumeMounts:
+          {{- range .Values.filebeat.secretMounts }}
+          - name: {{ .name }}
+            mountPath: {{ .path }}
+            {{- if .subPath }}
+            subPath: {{ .subPath }}
+            {{- end }}
+          {{- end }}
+          {{- range $path, $config := .Values.filebeat.config }}
+          - name: filebeat-config
+            mountPath: /usr/share/filebeat/{{ $path }}
+            readOnly: true
+            subPath: {{ $path }}
+          {{- end }}
+          - name: logs-volume
+            mountPath: /app/logs
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

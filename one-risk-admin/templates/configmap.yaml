@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cnx-risk-admin.fullname" . }}
+  labels:
+    {{- include "cnx-risk-admin.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    {{- toYaml .Values.config | nindent 4 }}
+{{- if and .Values.filebeat.enabled .Values.filebeat.config }}
+  application.yml: |-
+    {{ .Files.Get "config/application-{{ .Values.env }}.yml" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cnx-risk-admin.fullname" . }}-filebeat
+  labels:
+    {{- include "cnx-risk-admin.labels" . | nindent 4 }}
+data:
+  application.yml: |-
+    {{ .Files.Get "config/application-{{ .Values.env }}.yml" | indent 4 }}
+{{- range $path, $config := .Values.filebeat.config }}
+  {{ $path }}: |
+{{ $config | indent 4 -}}
+{{- end -}}
+{{- end -}}

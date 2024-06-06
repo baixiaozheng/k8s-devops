@@ -1,0 +1,46 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /one-risk-admin
+spring:
+  application:
+    name: one-risk-admin
+  shardingsphere:
+    datasource:
+      master:
+        url: jdbc:mysql://172.31.140.10:3307/one_risk?characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false
+        username: root
+        password: kaRBJPuz6oVQ
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.alibaba.druid.pool.DruidDataSource
+      slave1:
+        url: jdbc:mysql://172.31.140.8:3307/one_risk?characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false
+        username: root
+        password: kaRBJPuz6oVQ
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.alibaba.druid.pool.DruidDataSource
+      slave2:
+        url: jdbc:mysql://172.31.140.11:3307/one_risk?characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false
+        username: root
+        password: kaRBJPuz6oVQ
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.alibaba.druid.pool.DruidDataSource
+      # 配置数据源
+      names: master,slave1,slave2
+    masterslave:
+
+      # 配置slave节点的负载均衡均衡策略,采用轮询机制
+      load-balance-algorithm-type: round_robin
+      # 配置主库master,负责数据的写入
+      master-data-source-name: master
+      # 配置主从名称
+      name: master-slave
+      # 配置从库slave节点
+      slave-data-source-names: slave1,slave2
+    # 显示sql
+    props:
+      sql:
+        show: false
+    # 配置默认数据源master 默认数据源,主要用于写
+    sharding:
+      default-data-source-name: master

@@ -1,0 +1,39 @@
+{{- if .Values.gateway.enabled -}}
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ include "cnx-order.fullname" . }}
+  labels:
+    {{- include "cnx-order.labels" . | nindent 4 }}
+spec:
+  {{- with .Values.gateway.selector }}
+  selector:
+    istio: {{ .istio }}
+  {{- end }}
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts: 
+    {{- range $host := .Values.gateway.hosts }}
+    - {{ $host }}
+    {{- end }}
+  {{- if .Values.gateway.tls.enabled}}
+    tls:
+      httpsRedirect: {{ .Values.gateway.tls.httpsRedirect }}
+  {{ end }}
+  {{- if .Values.gateway.tls.enabled -}}
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: {{ .Values.gateway.tls.credentialName }}
+    hosts:
+    {{- range $host := .Values.gateway.hosts }}
+    - {{ $host }}
+    {{- end }}
+  {{- end }}
+{{- end }}
